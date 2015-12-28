@@ -13,10 +13,11 @@ app.filter('propsFilter', function() {
     var out = [];
 
     if (angular.isArray(items)) {
+      var keys = Object.keys(props);
+        
       items.forEach(function(item) {
         var itemMatches = false;
 
-        var keys = Object.keys(props);
         for (var i = 0; i < keys.length; i++) {
           var prop = keys[i];
           var text = props[prop].toLowerCase();
@@ -39,9 +40,13 @@ app.filter('propsFilter', function() {
   };
 });
 
-app.controller('DemoCtrl', function($scope, $http, $timeout) {
+app.controller('DemoCtrl', function($scope, $http, $timeout, $interval) {
   $scope.disabled = undefined;
   $scope.searchEnabled = undefined;
+
+  $scope.setInputFocus = function (){
+    $scope.$broadcast('UiSelectDemo1');
+  };
 
   $scope.enable = function() {
     $scope.disabled = false;
@@ -53,11 +58,11 @@ app.controller('DemoCtrl', function($scope, $http, $timeout) {
 
   $scope.enableSearch = function() {
     $scope.searchEnabled = true;
-  }
+  };
 
   $scope.disableSearch = function() {
     $scope.searchEnabled = false;
-  }
+  };
 
   $scope.clear = function() {
     $scope.person.selected = undefined;
@@ -73,6 +78,14 @@ app.controller('DemoCtrl', function($scope, $http, $timeout) {
     if (item.name[0] >= 'N' && item.name[0] <= 'Z')
         return 'From N - Z';
 
+  };
+
+  $scope.firstLetterGroupFn = function (item){
+      return item.name[0];
+  };
+
+  $scope.reverseOrderFilterFn = function(groups) {
+    return groups.reverse();
   };
 
   $scope.personAsync = {selected : "wladimir@email.com"};
@@ -117,7 +130,25 @@ app.controller('DemoCtrl', function($scope, $http, $timeout) {
     return item;
   };
 
+  $scope.peopleObj = {
+    '1' : { name: 'Adam',      email: 'adam@email.com',      age: 12, country: 'United States' },
+    '2' : { name: 'Amalie',    email: 'amalie@email.com',    age: 12, country: 'Argentina' },
+    '3' : { name: 'Estefanía', email: 'estefania@email.com', age: 21, country: 'Argentina' },
+    '4' : { name: 'Adrian',    email: 'adrian@email.com',    age: 21, country: 'Ecuador' },
+    '5' : { name: 'Wladimir',  email: 'wladimir@email.com',  age: 30, country: 'Ecuador' },
+    '6' : { name: 'Samantha',  email: 'samantha@email.com',  age: 30, country: 'United States' },
+    '7' : { name: 'Nicole',    email: 'nicole@email.com',    age: 43, country: 'Colombia' },
+    '8' : { name: 'Natasha',   email: 'natasha@email.com',   age: 54, country: 'Ecuador' },
+    '9' : { name: 'Michael',   email: 'michael@email.com',   age: 15, country: 'Colombia' },
+    '10' : { name: 'Nicolás',   email: 'nicolas@email.com',    age: 43, country: 'Colombia' }
+  };
+
   $scope.person = {};
+
+  $scope.person.selectedValue = $scope.peopleObj[3];
+  $scope.person.selectedSingle = 'Samantha';
+  $scope.person.selectedSingleKey = '5';
+
   $scope.people = [
     { name: 'Adam',      email: 'adam@email.com',      age: 12, country: 'United States' },
     { name: 'Amalie',    email: 'amalie@email.com',    age: 12, country: 'Argentina' },
@@ -133,6 +164,8 @@ app.controller('DemoCtrl', function($scope, $http, $timeout) {
 
   $scope.availableColors = ['Red','Green','Blue','Yellow','Magenta','Maroon','Umbra','Turquoise'];
 
+  $scope.singleDemo = {};
+  $scope.singleDemo.color = '';
   $scope.multipleDemo = {};
   $scope.multipleDemo.colors = ['Blue','Red'];
   $scope.multipleDemo.colors2 = ['Blue','Red'];
@@ -141,6 +174,23 @@ app.controller('DemoCtrl', function($scope, $http, $timeout) {
   $scope.multipleDemo.selectedPeopleWithGroupBy = [$scope.people[8], $scope.people[6]];
   $scope.multipleDemo.selectedPeopleSimple = ['samantha@email.com','wladimir@email.com'];
 
+  $scope.appendToBodyDemo = {
+    remainingToggleTime: 0,
+    present: true,
+    startToggleTimer: function() {
+      var scope = $scope.appendToBodyDemo;
+      var promise = $interval(function() {
+        if (scope.remainingTime < 1000) {
+          $interval.cancel(promise);
+          scope.present = !scope.present;
+          scope.remainingTime = 0;
+        } else {
+          scope.remainingTime -= 1000;
+        }
+      }, 1000);
+      scope.remainingTime = 3000;
+    }
+  };
 
   $scope.address = {};
   $scope.refreshAddresses = function(address) {
@@ -152,6 +202,13 @@ app.controller('DemoCtrl', function($scope, $http, $timeout) {
       $scope.addresses = response.data.results;
     });
   };
+
+  $scope.addPerson = function(item, model){
+    if(item.hasOwnProperty('isTag')) {
+      delete item.isTag;
+      $scope.people.push(item);
+    }
+  }
 
   $scope.country = {};
   $scope.countries = [ // Taken from https://gist.github.com/unceus/6501985
